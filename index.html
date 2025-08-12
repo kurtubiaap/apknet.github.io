@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APK.NET Scanner</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        body.dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode header {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode h1 {
+            color: #bb86fc;
+        }
+
+        body.dark-mode .description {
+            color: #a0a0a0;
+        }
+
+        body.dark-mode .scanner-container {
+            background: #1e1e1e;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        body.dark-mode #reader {
+            background-color: #2c2c2c;
+            border-color: #555;
+        }
+
+        body.dark-mode #result {
+            background-color: #2c2c2c;
+            border-color: #444;
+            color: #eee;
+        }
+
+        body.dark-mode .btn {
+            background: #6200ee;
+            color: #fff;
+        }
+
+        body.dark-mode .btn:hover {
+            background: #3700b3;
+        }
+
+        body.dark-mode #status {
+            color: #cf6679;
+        }
+
+        body.dark-mode .scanner-guidelines {
+            border-color: rgba(187, 134, 252, 0.7);
+        }
+
+        body.dark-mode .info-panel {
+            background-color: #1e1e1e;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+            color: #ccc;
+        }
+
+        body.dark-mode .info-title {
+            color: #bb86fc;
+        }
+
+        body.dark-mode .info-title i {
+            color: #bb86fc;
+        }
+
+        body.dark-mode .info-content {
+            color: #aaa;
+        }
+
+        body.dark-mode .info-list li {
+            color: #ccc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .scanner-container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #reader {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #ecf0f1;
+            margin-bottom: 15px;
+            border: 2px dashed #bdc3c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #reader img {
+            width: 100px;
+            opacity: 0.4;
+        }
+
+        #result {
+            font-family: monospace;
+            word-break: break-word;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 1px solid #e9ecef;
+            display: none;
+        }
+
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn i {
+            margin-right: 8px;
+        }
+
+        #status {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #e74c3c;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .scanner-guidelines {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px solid rgba(52, 152, 219, 0.5);
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .info-panel {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .info-title i {
+            margin-right: 10px;
+            color: #3498db;
+        }
+
+        .info-content {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        .info-list {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            #reader {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <header>
+        <h1>QR Code Scanner</h1>
+        <h1>Hotspot APK.NET</h1>
+       
+    </header>
+
+    <div class="scanner-container">
+        <div id="reader">
+            <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/5564e28a-3a1d-43f7-9897-e019c7e337d8.png"
+                alt="QR code outline pattern showing scanning area" />
+            <div class="scanner-guidelines"></div>
+        </div>
+        <div id="status"></div>
+        <button id="scanBtn" class="btn">Start Scanning</button>
+        <div id="result"></div>
+    </div>
+
+    <div class="info-panel">
+        <h3 class="info-title"><i>ℹ️</i> Cara Menggunakan</h3>
+        <div class="info-content">
+            <ol class="info-list">
+                <li>Klik "Start Scanning" Untuk Mengaktifkan Kamera Anda</li>
+                <li>Arahkan Kamera Ke Kode QR Yang Tersedia Dari APK NET</li>
+                <li>Jika Berhasil, Anda Langsung Terhubung Ke Jaringan</li>
+                <li>Ingat, Gunakan Internet Dengan Bijak Ya!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('scanBtn');
+            const resultDiv = document.getElementById('result');
+            const statusDiv = document.getElementById('status');
+            let html5QrCode;
+            let isScanning = false;
+
+            btn.addEventListener('click', toggleScanner);
+
+            function toggleScanner() {
+                if (!isScanning) {
+                    startScanner();
+                } else {
+                    stopScanner();
+                }
+            }
+
+            function startScanner() {
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    statusDiv.textContent = "Camera access not supported in your browser";
+                    statusDiv.style.color = "#e74c3c";
+                    return;
+                }
+                statusDiv.textContent = "Starting scanner...";
+                statusDiv.style.color = "#f39c12";
+                html5QrCode = new Html5Qrcode("reader");
+                const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                    handleSuccess(decodedText, decodedResult);
+                };
+                const config = {
+                    fps: 10,
+                    qrbox: {
+                        width: 400,
+                        height: 400
+                    },
+                    experimentalFeatures: {
+                        useBarCodeDetectorIfSupported: true
+                    }
+                };
+                html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    qrCodeSuccessCallback,
+                    qrCodeErrorCallback
+                ).then(() => {
+                    isScanning = true;
+                    btn.textContent = "Stop Scanning";
+                    statusDiv.textContent = "Scanning for QR codes...";
+                    statusDiv.style.color = "#2ecc71";
+                }).catch(err => {
+                    statusDiv.textContent = `Error: ${err.message || 'Failed to start camera'}`;
+                    statusDiv.style.color = "#e74c3c";
+                });
+            }
+
+            function stopScanner() {
+                if (!isScanning || !html5QrCode) return;
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    btn.textContent = "Start Scanning";
+                    statusDiv.textContent = "Scanner stopped";
+                    statusDiv.style.color = "#e74c3c";
+                }).catch(err => {
+                    console.error("Error stopping scanner:", err);
+                    statusDiv.textContent = "Error stopping scanner";
+                });
+            }
+
+            function handleSuccess(decodedText, decodedResult) {
+                statusDiv.textContent = "";
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(200);
+                }
+                playScanSound();
+                html5QrCode.stop().then(() => {
+                    isScanning = false;
+                    btn.textContent = "Start Scanning";
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Scan Berhasil!',
+                        text: decodedText,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        startScanner();
+                    });
+                }).catch(err => {
+                    console.error("Error stopping scanner:", err);
+                });
+            }
+
+            function qrCodeErrorCallback(error) {
+            }
+
+            function playScanSound() {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = "sine";
+                oscillator.frequency.value = 800;
+                gainNode.gain.value = 10;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.5);
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            }
+
+            window.addEventListener('beforeunload', () => {
+                if (isScanning && html5QrCode) {
+                    html5QrCode.stop();
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
